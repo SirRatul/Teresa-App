@@ -1,0 +1,166 @@
+import React, {useState, useEffect} from 'react';
+import { StyleSheet, Text, View, Image, RefreshControl, ScrollView, FlatList, TouchableOpacity } from 'react-native';
+import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import Avatar from '../../assets/icons/Avatar.png';
+import PrescriptionPhoto from '../../assets/icons/prescriptionPhoto.png';
+import { AntDesign } from '@expo/vector-icons';
+import Colors from '../../constants/Colors';
+import CustomAlert from '../../components/CustomAlert';
+import PhotoShowModal from '../../components/PhotoShowModal';
+import moment from 'moment';
+import {APP_BACKEND_URL} from "@env"
+
+const MyPrescriptionScreen = (props) => {
+    const [token, setToken] = useState('')
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const [todayPrescription, setTodayPrescription] = useState([])
+    const [yesterdayPrescription, setYesterdayPrescription] = useState([])
+    const [otherDayPrescription, setOtherDayPrescription] = useState([])
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [photoShowModal, setPhotoShowModal] = useState(false)
+    const [pickedImage, setPickedImage] = useState(null)
+    const getUserData = async() => {
+        const userData = await AsyncStorage.getItem('userData')
+        const tempUserData = JSON.parse(userData)
+        setToken(tempUserData.token)
+        setIsRefreshing(true)
+        try {
+            const response = await axios.get(APP_BACKEND_URL+'files/prescription', {
+                headers: {
+                    Authorization : `Bearer ${tempUserData.token}`
+                }
+            })
+            tempArray = response.data.message
+            tempArray.sort(function(a,b){
+                return new Date(b.creation_date) - new Date(a.creation_date)
+            })
+            var currentDate = new Date().toISOString().substring(0, new Date().toISOString().indexOf('T'));
+            var previousDate = moment().add(-1, 'days');
+            var previousDay = previousDate.toISOString().substring(0, previousDate.toISOString().indexOf('T'));
+            var today = []
+            var yesterday = []
+            var other = []
+            tempArray.forEach((tempData) => {
+                var tempDate = tempData.creation_date.substring(0, tempData.creation_date.indexOf('T'));
+                if(tempDate.localeCompare(currentDate) == 0){
+                    today.push(tempData)
+                } else if(tempDate.localeCompare(previousDay) == 0){
+                    yesterday.push(tempData)
+                } else {
+                    other.push(tempData)
+                }
+            })
+            setTodayPrescription(today)
+            setYesterdayPrescription(yesterday)
+            setOtherDayPrescription(other)
+        } catch (error) {
+            setErrorMessage(error.response.data.message)
+        }
+        setIsRefreshing(false)
+    }
+    const authAxios = axios.create({
+        baseURL: 'https://teresa-server.herokuapp.com',
+        headers: {
+            Authorization : `Bearer ${token}`
+        }
+    })
+    useEffect(()=>{
+        getUserData()
+    }, [])
+    const showImageHandler = (imageUri) => {
+        setPickedImage(imageUri)
+        setPhotoShowModal(true)
+    }
+    const modalHandler = () => {
+        setPickedImage(null)
+        setErrorMessage(null)
+        setPhotoShowModal(false)
+    }
+    const orderHandler = (imageUrl) => {
+        console.log('order')
+        modalHandler()
+        console.log(imageUrl)
+        props.navigation.navigate('UploadPrescription', { 
+            imageUrl
+        })
+    }
+    return <ScrollView style={{ flex: 1 }} refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={getUserData} />
+      }>
+        <View style={styles.screen}>
+            {errorMessage &&<CustomAlert message={errorMessage} onClear={modalHandler}/>}
+            {photoShowModal &&<PhotoShowModal onClear={modalHandler} imageUri={pickedImage} orderHandler={orderHandler}/>}
+            {
+                todayPrescription.length > 0 &&
+                <View style={{marginHorizontal: RFPercentage(3)}}>
+                    <Text style={{marginTop: RFPercentage(4), marginLeft: RFPercentage(3), fontSize: 18, color: Colors.rhino}}>Today</Text>
+                    <FlatList data={todayPrescription} keyExtractor={(item) => item.prescriptionId} numColumns={2} renderItem={(itemData) => {
+                        return <View style={{width: '40%', justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3)}}>
+                        <TouchableOpacity onPress={() => {showImageHandler(itemData.item.path)}}>
+                            <Image style={{width: RFValue(200), height: RFValue(200), resizeMode: 'contain', marginTop: RFPercentage(2)}} source={PrescriptionPhoto}/>
+                        </TouchableOpacity>
+                        <View style={{width: '100%', justifyContent: 'center', alignItems: 'center'}}>
+                            <Text style={{color: Colors.amethystSmoke, fontSize: RFValue(15)}}>{itemData.item.code}</Text>
+                            <Text style={{color: Colors.amethystSmoke, fontSize: RFValue(15)}}>Date: {moment(itemData.item.creation_date).format('DD-MM-YYYY')}</Text>
+                        </View>
+                    </View>
+                    }}/>
+                </View>
+            }
+            {
+                yesterdayPrescription.length > 0 &&
+                <View style={{marginHorizontal: RFPercentage(3)}}>
+                    <Text style={{marginTop: RFPercentage(4), marginLeft: RFPercentage(3), fontSize: 18, color: Colors.rhino}}>Yesterday</Text>
+                    <FlatList data={yesterdayPrescription} keyExtractor={(item) => item.prescriptionId} numColumns={2} renderItem={(itemData) => {
+                        return <View style={{width: '40%', justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3)}}>
+                        <TouchableOpacity onPress={() => {showImageHandler(itemData.item.path)}}>
+                            <Image style={{width: RFValue(200), height: RFValue(200), resizeMode: 'contain', marginTop: RFPercentage(2)}} source={PrescriptionPhoto}/>
+                        </TouchableOpacity>
+                        <View style={{width: '100%', justifyContent: 'center', alignItems: 'center'}}>
+                            <Text style={{color: Colors.amethystSmoke, fontSize: RFValue(15)}}>{itemData.item.code}</Text>
+                            <Text style={{color: Colors.amethystSmoke, fontSize: RFValue(15)}}>Date: {moment(itemData.item.creation_date).format('DD-MM-YYYY')}</Text>
+                        </View>
+                    </View>
+                }}/>
+                </View>
+            }
+            {
+                otherDayPrescription.length > 0 &&
+                <View style={{marginHorizontal: RFPercentage(3)}}>
+                    <Text style={{marginTop: RFPercentage(4), marginLeft: RFPercentage(3), fontSize: 18, color: Colors.rhino}}>Previous</Text>
+                    <FlatList data={otherDayPrescription} keyExtractor={(item) => item.prescriptionId} numColumns={2} renderItem={(itemData) => {
+                        return <View style={{width: '40%', justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3)}}>
+                        <TouchableOpacity onPress={() => {showImageHandler(itemData.item.path)}}>
+                            <Image style={{width: RFValue(200), height: RFValue(200), resizeMode: 'contain', marginTop: RFPercentage(2)}} source={PrescriptionPhoto}/>
+                        </TouchableOpacity>
+                        <View style={{width: '100%', justifyContent: 'center', alignItems: 'center'}}>
+                            <Text style={{color: Colors.amethystSmoke, fontSize: RFValue(15)}}>{itemData.item.code}</Text>
+                            <Text style={{color: Colors.amethystSmoke, fontSize: RFValue(15)}}>Date: {moment(itemData.item.creation_date).format('DD-MM-YYYY')}</Text>
+                        </View>
+                    </View>
+                    }}/>
+                </View>
+            }
+            <AntDesign name="closecircle" size={20} color={Colors.funBlue} style={{position: 'absolute', top: RFValue(10), right: RFPercentage(3), alignSelf: 'flex-end'}} onPress={() => {
+                props.navigation.navigate('Home')
+            }}/>
+        </View>
+    </ScrollView>
+}
+
+MyPrescriptionScreen.navigationOptions = (navData) => {
+    return {
+        headerTitle: 'My Prescription',
+        headerRight: () => <Image style={{width: 32, height: 32, marginRight: 10, resizeMode: 'contain'}} source={Avatar}/>
+    }
+}
+
+const styles = StyleSheet.create({
+    screen: {
+        flex: 1
+    }
+})
+
+export default MyPrescriptionScreen

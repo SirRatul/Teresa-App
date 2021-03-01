@@ -3,15 +3,16 @@
     "name": "Teresa",
     "slug": "Teresa",
     "version": "1.0.0",
+    "owner": "ocean_blue",
+    "description": "Teresa is a medication management service, specially designed to assist people taking medicine in time. Proper meditation is very important to maintain healthcare tasks in line.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 10
     },
     "assetBundlePatterns": [
       "**/*"
@@ -23,7 +24,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.ocean_blue.Teresa"
     },
     "web": {
       "favicon": "./assets/favicon.png"
