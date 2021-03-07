@@ -29,5 +29,8 @@ export default {
     periwinkleGray: '#B4CCE4',
     mariner: '#2C78C2',
     amethystSmoke: '#968AA6',
-    inputFieldBackground: '#E5EEF5'
+    inputFieldBackground: '#E5EEF5',
+    alabaster: '#FCFCFC',
+    yukonGold: '#727A08',
+    stTropaz: '#26598A'
 }

@@ -11,6 +11,7 @@ import UploadPrescription from '../../assets/icons/Icon-awesome-file-upload.png'
 import SetReminder from '../../assets/icons/Icon-awesome-clock.png';
 import MyReminder from '../../assets/icons/ALARM.png';
 import MyPrescription from '../../assets/icons/MEDICAL.png';
+import MyOrder from '../../assets/icons/order.png';
 
 const MenuScreen = (props) => {
     const [name, setName] = useState(null)
@@ -88,12 +89,25 @@ const MenuScreen = (props) => {
                 </View>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
+                props.navigation.navigate('OrderList')
+            }}>
+                <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 5, marginHorizontal: RFPercentage(3), marginTop: RFPercentage(2), borderWidth: 1, borderColor: Colors.alto, backgroundColor: Colors.blackSqueeze}}>
+                    <View style={{width: '100%', flexDirection: 'row', alignItems: 'center'}}>
+                        <View style={{width: '15%', justifyContent: 'center', alignItems: 'center'}}>
+                            <Image style={{width: 32, height: 32, marginRight: 10, resizeMode: 'contain'}} source={MyOrder}/>
+                        </View>
+                        <View style={{width: '85%', justifyContent: 'center'}}>
+                            <Text style={{color: Colors.chathamsBlue, fontSize: RFValue(15), fontWeight: 'bold'}}>My Orders</Text>
+                        </View>
+                    </View>
+                </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
                 props.navigation.navigate('Reminder')
             }}>
                 <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 5, marginHorizontal: RFPercentage(3), marginTop: RFPercentage(2), borderWidth: 1, borderColor: Colors.alto, backgroundColor: Colors.blackSqueeze}}>
                     <View style={{width: '100%', flexDirection: 'row', alignItems: 'center'}}>
                         <View style={{width: '15%', justifyContent: 'center', alignItems: 'center'}}>
-                            {/* <MaterialIcons name="access-alarms" size={28} color={Colors.danube} /> */}
                             <Image style={{width: 32, height: 32, marginRight: 10, resizeMode: 'contain'}} source={MyReminder}/>
                         </View>
                         <View style={{width: '85%', justifyContent: 'center'}}>

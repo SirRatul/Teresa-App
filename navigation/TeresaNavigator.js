@@ -22,6 +22,8 @@ import SetReminderScreen from '../screens/Reminder/SetReminderScreen';
 import UploadPrescriptionScreen from '../screens/Prescription/UploadPrescriptionScreen';
 import MyProfileScreen from '../screens/Profile/MyProfileScreen';
 import UpdateReminderScreen from '../screens/Reminder/UpdateReminderScreen';
+import OrderDetailsScreen from '../screens/Order/OrderDetails';
+import OrderListScreen from '../screens/Order/OrderList';
 
 const defaultNavOptions = {
     headerShown: true,
@@ -75,7 +77,9 @@ const MenuNavigator = createStackNavigator({
         Menu: MenuScreen,
         SetReminder: SetReminderScreen,
         UploadPrescription: UploadPrescriptionScreen,
-        MyProfile: MyProfileScreen
+        MyProfile: MyProfileScreen,
+        OrderDetails: OrderDetailsScreen,
+        OrderList: OrderListScreen
     }, {
         defaultNavigationOptions: defaultNavOptions
     }

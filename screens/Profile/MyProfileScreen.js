@@ -22,6 +22,7 @@ const MyProfileScreen = (props) => {
     const [fullName, setFullName] = useState('')
     const [email, setEmail] = useState('')
     const [dateOfBirth, setDateOfBirth] = useState()
+    const [invalidDate, setInvalidDate] = useState(false)
     const [dateOfBirthPickerShow, setDateOfBirthPickerShow] = useState(false)
     const [height, setHeight] = useState('')
     const [weight, setWeight] = useState('')
@@ -30,7 +31,7 @@ const MyProfileScreen = (props) => {
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
     const authAxios = axios.create({
-        baseURL: 'https://teresa-server.herokuapp.com',
+        baseURL: APP_BACKEND_URL,
         headers: {
             Authorization : `Bearer ${token}`
         }
@@ -47,7 +48,6 @@ const MyProfileScreen = (props) => {
                     Authorization : `Bearer ${tempUserData.token}`
                 }
             })
-            console.log(response.data)
             setFirstName(response.data.message.firstName)
             setLastName(response.data.message.lastName)
             setFullName(response.data.message.firstName+' '+response.data.message.lastName)
@@ -57,6 +57,7 @@ const MyProfileScreen = (props) => {
             if(response.data.message.dob != 'Invalid date'){
                 setDateOfBirth(new Date(response.data.message.dob))
             } else {
+                setInvalidDate(true)
                 setDateOfBirth(new Date())
             }
             if(response.data.message.height){
@@ -70,7 +71,6 @@ const MyProfileScreen = (props) => {
             }
             setPhoneNumber(response.data.message.phone.substring(2))
         } catch (error) {
-            console.log(error.response.data)
             setErrorMessage(error.response.data.message)
         }
         setIsRefreshing(false)
@@ -79,6 +79,7 @@ const MyProfileScreen = (props) => {
         getUserData()
     }, [])
     const dateOfBirthChange = (event, selectedValue) => {
+        setInvalidDate(false)
         setDateOfBirthPickerShow(Platform.OS === 'ios')
         const selectedDate = selectedValue || dateOfBirth
         setDateOfBirth(selectedDate)
@@ -92,7 +93,7 @@ const MyProfileScreen = (props) => {
         } else{
             setIsLoading(true)
             try {
-                const response = await authAxios.patch('/users/me', {
+                const response = await authAxios.patch('users/me', {
                     firstName,
                     lastName,
                     email,
@@ -101,7 +102,6 @@ const MyProfileScreen = (props) => {
                     height,
                     weight: parseInt(weight)
                 })
-                console.log(response.data)
                 setIsLoading(false)
                 setErrorMessage('Updated Successfully')
                 setFullName(firstName+' '+lastName)
@@ -162,9 +162,16 @@ const MyProfileScreen = (props) => {
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.inputFieldBackground, flexDirection: 'row'}}>
                     <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
-                        <TouchableWithoutFeedback onPress={showDateOfBirthpicker}>
-                            <Text style={{paddingHorizontal: 8}}>{moment(dateOfBirth).format('YYYY-MM-DD')}</Text>
-                        </TouchableWithoutFeedback>
+                        {
+                            invalidDate ?
+                            <TouchableWithoutFeedback onPress={showDateOfBirthpicker}>
+                                <Text style={{paddingHorizontal: 8}}>Select Birth Date</Text>
+                            </TouchableWithoutFeedback>
+                            :
+                            <TouchableWithoutFeedback onPress={showDateOfBirthpicker}>
+                                <Text style={{paddingHorizontal: 8}}>{moment(dateOfBirth).format('YYYY-MM-DD')}</Text>
+                            </TouchableWithoutFeedback>
+                        }
                     </View>
                     <FontAwesome name="calendar" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={showDateOfBirthpicker} />
                 </View>

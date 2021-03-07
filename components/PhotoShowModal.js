@@ -10,47 +10,36 @@ import * as FileSystem from "expo-file-system";
 import * as Permissions from "expo-permissions";
 
 const PhotoShowModal = (props) => {
-    const images = [{
-        url: 'https://avatars2.githubusercontent.com/u/7970947?v=3&s=460',
-        // width: number
-        // height: number
-        // Optional, if you know the image size, you can set the optimization performance
-        // You can pass props to <Image />.
-        props: {
-            // headers: ...
-        }
-    }]
-    function downloadFile(uri) {
-        //let filename = uri.split("/");
-        //filename = filename[filename.length - 1];
-        let fileUri = FileSystem.documentDirectory + 'doraemon.png';
-        FileSystem.downloadAsync(uri, fileUri)
-          .then(({ uri }) => {
+    const downloadFile = (uri) => {
+        let filename = uri.split("/");
+        filename = filename[filename.length - 1];
+        let fileUri = FileSystem.documentDirectory + filename;
+        FileSystem.downloadAsync(uri, fileUri).then(({ uri }) => {
             saveFile(uri);
-          })
-          .catch(error => {
+        }).catch(error => {
             Alert.alert("Error", "Couldn't download photo");
             console.error(error);
-          });
-      }
-    async function saveFile(fileUri) {
-    const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-    if (status === "granted") {
-        const asset = await MediaLibrary.createAssetAsync(fileUri);
-        await MediaLibrary.createAlbumAsync("Download", asset, false);
-        Alert.alert("Success", "Image was successfully downloaded!");
+        });
     }
+    const saveFile = async(fileUri) => {
+        const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+        if (status === "granted") {
+            const asset = await MediaLibrary.createAssetAsync(fileUri);
+            await MediaLibrary.createAlbumAsync("Download", asset, false);
+            Alert.alert("Success", "Image was successfully downloaded!");
+        }
     }
 
     return <Modal animationType="slide" transparent={true} visible={true} onRequestClose={props.onClear}>
         <View style={{flex: 1, backgroundColor: 'white'}}>
-            {/* <Text>{props.imageUri}</Text> */}
-            <ImageViewer imageUrls={images} backgroundColor={'white'} onSave={async(url) =>{
-                console.log('save')
-                console.log(url)
-                downloadFile('https://avatars2.githubusercontent.com/u/7970947?v=3&s=460')
+            <ImageViewer imageUrls={[{
+                // url: 'https://avatars2.githubusercontent.com/u/7970947?v=3&s=460',
+                url: 'https://'+props.imageUri
+            }]} backgroundColor={'white'} onSave={async(url) =>{
+                // downloadFile('https://avatars2.githubusercontent.com/u/7970947?v=3&s=460')
+                downloadFile('https://'+props.imageUri)
             }}/>
-            <TouchableOpacity onPress={() => {props.orderHandler('https://avatars2.githubusercontent.com/u/7970947?v=3&s=460')}} style={{marginBottom: RFValue(20)}}>
+            <TouchableOpacity onPress={() => {props.orderHandler('https://'+props.imageUri)}} style={{marginBottom: RFValue(20)}}>
                 <View style={{justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3), marginTop: RFPercentage(3), backgroundColor: Colors.funBlue, padding: 6}}>
                     <Text style={{fontSize: RFValue(18), color: 'white'}}>Order Medicine</Text>
                 </View>

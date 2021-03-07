@@ -29,6 +29,7 @@ const UploadPrescriptionScreen = (props) => {
     const [previewButtonDisable, setPreviewButtonDisable] = useState(false)
     const [submitButtonDisable, setSubmitButtonDisable] = useState(false)
     const [prescriptionImage, setPrescriptionImage] = useState(false)
+    const [prescriptionId, setPrescriptionId] = useState(null)
     const [previewPopUp, setPreviewPopUp] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState(null)
@@ -49,12 +50,14 @@ const UploadPrescriptionScreen = (props) => {
     useEffect(()=>{
         getUserData()
         if(props.navigation.getParam('imageUrl')){
-            console.log('if')
             setPickedImage(props.navigation.getParam('imageUrl'))
+        }
+        if(props.navigation.getParam('imageUrl')){
+            setPrescriptionId(props.navigation.getParam('prescriptionId'))
         }
     }, [])
     const authAxios = axios.create({
-        baseURL: 'https://teresa-server.herokuapp.com',
+        baseURL: APP_BACKEND_URL,
         headers: {
             Authorization : `Bearer ${token}`
         }
@@ -100,40 +103,58 @@ const UploadPrescriptionScreen = (props) => {
         }
     }
     const submitHandler = async() => {
-        let fileType = pickedImage.substring(pickedImage.lastIndexOf(".") + 1);
-        var formData = new FormData();
-        if(prescriptionImage){
-            console.log('if')
-            formData.append("file", pickedImage);
+        if(prescriptionId) {
+            setIsLoading(true)
+            try {
+                const response = await authAxios.post('files/prescription/order', {
+                    id: prescriptionId,
+                    order: inputList,
+                    deliveryDetails,
+                    additionalNote
+                });
+                setIsLoading(false)
+                setPickedImage(null)
+                setAdditionalNote('')
+                setDeliveryDetails('')
+                setPrescriptionId(null)
+                setInputList([{ medicineSN: '', unit: '', day: '' }])
+                setErrorMessage('Prescription Ordered Succesfully')
+            } catch (error) {
+                setIsLoading(false)
+                setErrorMessage(error.response.data.message)
+            }
         } else {
-            console.log('else')
-            formData.append("file", {
-                uri: pickedImage,
-                name: `photo.${fileType}`,
-                type: `image/${fileType}`
-            });
-        }
-        formData.append("order", JSON.stringify(inputList));
-        formData.append("additionalNote", additionalNote);
-        formData.append("deliveryDetails", deliveryDetails);
-        setIsLoading(true)
-        try {
-            const response = await authAxios.post('/files/prescription', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            console.log(response.data)
-            setIsLoading(false)
-            setPickedImage(null)
-            setAdditionalNote('')
-            setDeliveryDetails('')
-            setInputList([{ medicineSN: '', unit: '', day: '' }])
-            setErrorMessage('Prescription Uploaded Succesfully')
-        } catch (error) {
-            console.log(error.response.data)
-            setIsLoading(false)
-            setErrorMessage(error.response.data.message)
+            let fileType = pickedImage.substring(pickedImage.lastIndexOf(".") + 1);
+            var formData = new FormData();
+            if(prescriptionImage){
+                formData.append("file", pickedImage);
+            } else {
+                formData.append("file", {
+                    uri: pickedImage,
+                    name: `photo.${fileType}`,
+                    type: `image/${fileType}`
+                });
+            }
+            formData.append("order", JSON.stringify(inputList));
+            formData.append("additionalNote", additionalNote);
+            formData.append("deliveryDetails", deliveryDetails);
+            setIsLoading(true)
+            try {
+                const response = await authAxios.post('files/prescription', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                setIsLoading(false)
+                setPickedImage(null)
+                setAdditionalNote('')
+                setDeliveryDetails('')
+                setInputList([{ medicineSN: '', unit: '', day: '' }])
+                setErrorMessage('Prescription Uploaded Succesfully')
+            } catch (error) {
+                setIsLoading(false)
+                setErrorMessage(error.response.data.message)
+            }
         }
     }
     const takeImageHandler = async() => {
@@ -149,11 +170,13 @@ const UploadPrescriptionScreen = (props) => {
     const chooseImageHandler = () => {
         setPhotoChooseModal(true)
     }
-    const takeImageFromPrescriptionHandler = (imageUrl) => {
-        console.log('takeImageFromPrescriptionHandler')
-        console.log(imageUrl)
+    const takeImageFromPrescriptionHandler = (imageUrl, prescriptionId) => {
         setPickedImage(imageUrl)
-        modalHandler()
+        setPrescriptionId(prescriptionId)
+        setErrorMessage(null)
+        setPreviewPopUp(false)
+        setPhotoPickModal(false)
+        setPhotoChooseModal(false)
         setPrescriptionImage(true)
     }
     const handleInputChange = (name, index, value) => {
@@ -174,11 +197,18 @@ const UploadPrescriptionScreen = (props) => {
         setPreviewPopUp(false)
         setPhotoPickModal(false)
         setPhotoChooseModal(false)
+        setPrescriptionId(null)
+    }
+    const previewModalHandler = () => {
+        setErrorMessage(null)
+        setPreviewPopUp(false)
+        setPhotoPickModal(false)
+        setPhotoChooseModal(false)
     }
     return <View style={styles.screen}>
-        {previewPopUp &&<UploadPrescriptionPreviewScreen pickedImage={pickedImage} unitSelected={unitSelected} inputList={inputList} additionalNote={additionalNote} deliveryDetails={deliveryDetails} takeImage={takeImageHandler} onClear={modalHandler}/>}
+        {previewPopUp &&<UploadPrescriptionPreviewScreen pickedImage={pickedImage} unitSelected={unitSelected} inputList={inputList} additionalNote={additionalNote} deliveryDetails={deliveryDetails} takeImage={takeImageHandler} onClear={previewModalHandler}/>}
         <ScrollView style={styles.screen}>
-            {errorMessage &&<CustomAlert message={errorMessage} onClear={modalHandler}/>}
+            {errorMessage &&<CustomAlert message={errorMessage} onClear={previewModalHandler}/>}
             {photoPickModal &&<PhotoPickModal onClear={modalHandler} takeImage={takeImageHandler} chooseImage={chooseImageHandler}/>}
             {photoChooseModal &&<PrescriptionPhotoChooseModal onClear={modalHandler} chooseImage={takeImageFromPrescriptionHandler}/>}
             <View style={{marginVertical: RFPercentage(7), marginHorizontal: RFPercentage(3), justifyContent: 'center', alignItems: 'center'}}>
@@ -194,6 +224,7 @@ const UploadPrescriptionScreen = (props) => {
                     <Image style={{height: RFValue(256), width: RFValue(256), resizeMode: 'contain'}} source={{uri: pickedImage}}/>
                     <AntDesign name="closecircle" size={20} color='red' style={{position: 'absolute', top: 0, right: 0, alignSelf: 'flex-end'}} onPress={() => {
                         setPickedImage(null)
+                        setPrescriptionId(null)
                     }}/>
                 </View>
                 }
