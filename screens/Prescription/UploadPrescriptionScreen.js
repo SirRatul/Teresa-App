@@ -14,6 +14,7 @@ import UploadPrescriptionPreviewScreen from './UploadPrescriptionPreviewScreen';
 import CustomAlert from '../../components/CustomAlert';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrescriptionPhotoChooseModal from '../../components/PrescriptionPhotoChooseModal';
+import {APP_BACKEND_URL} from "@env"
 
 const UploadPrescriptionScreen = (props) => {
     const [token, setToken] = useState('')

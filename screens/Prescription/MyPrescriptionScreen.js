@@ -34,29 +34,32 @@ const MyPrescriptionScreen = (props) => {
                     Authorization : `Bearer ${tempUserData.token}`
                 }
             })
-            tempArray = response.data.message
-            tempArray.sort(function(a,b){
-                return new Date(b.creation_date) - new Date(a.creation_date)
-            })
-            var currentDate = new Date().toISOString().substring(0, new Date().toISOString().indexOf('T'));
-            var previousDate = moment().add(-1, 'days');
-            var previousDay = previousDate.toISOString().substring(0, previousDate.toISOString().indexOf('T'));
-            var today = []
-            var yesterday = []
-            var other = []
-            tempArray.forEach((tempData) => {
-                var tempDate = tempData.creation_date.substring(0, tempData.creation_date.indexOf('T'));
-                if(tempDate.localeCompare(currentDate) == 0){
-                    today.push(tempData)
-                } else if(tempDate.localeCompare(previousDay) == 0){
-                    yesterday.push(tempData)
-                } else {
-                    other.push(tempData)
-                }
-            })
-            setTodayPrescription(today)
-            setYesterdayPrescription(yesterday)
-            setOtherDayPrescription(other)
+            console.log(response.data.message)
+            if(response.data.message != 'You do not have any prescription'){
+                tempArray = response.data.message
+                tempArray.sort(function(a,b){
+                    return new Date(b.creation_date) - new Date(a.creation_date)
+                })
+                var currentDate = new Date().toISOString().substring(0, new Date().toISOString().indexOf('T'));
+                var previousDate = moment().add(-1, 'days');
+                var previousDay = previousDate.toISOString().substring(0, previousDate.toISOString().indexOf('T'));
+                var today = []
+                var yesterday = []
+                var other = []
+                tempArray.forEach((tempData) => {
+                    var tempDate = tempData.creation_date.substring(0, tempData.creation_date.indexOf('T'));
+                    if(tempDate.localeCompare(currentDate) == 0){
+                        today.push(tempData)
+                    } else if(tempDate.localeCompare(previousDay) == 0){
+                        yesterday.push(tempData)
+                    } else {
+                        other.push(tempData)
+                    }
+                })
+                setTodayPrescription(today)
+                setYesterdayPrescription(yesterday)
+                setOtherDayPrescription(other)
+            }
         } catch (error) {
             setErrorMessage(error.response.data.message)
         }

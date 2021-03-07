@@ -27,7 +27,9 @@ const PrescriptionPhotoChooseModal = (props) => {
                 Authorization : `Bearer ${tempUserData.token}`
             }
         })
-        setPrescriptionDetails(response.data.message)
+        if(response.data.message != 'You do not have any prescription'){
+          setPrescriptionDetails(response.data.message)
+        }
     } catch (error) {
         setErrorMessage(error.response.data.message)
     }
