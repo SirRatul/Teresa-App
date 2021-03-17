@@ -14,11 +14,11 @@ const PhotoPickModal = (props) => {
         <View style={{width: '10%', borderBottomColor: 'black',borderBottomWidth: 3,}}/>
         <Text style={{width: '100%', marginTop: 15, textAlign: "center", color: 'black', fontSize: RFValue(30)}}>Upload Photo</Text>
         <Text style={{width: '100%', textAlign: "center", color: 'black', fontSize: RFValue(13)}}>Choose Your Prescription</Text>
-        <TouchableOpacity style={{width: '100%'}} onPress={props.chooseImage}>
+        {/* <TouchableOpacity style={{width: '100%'}} onPress={props.chooseImage}>
             <View style={{width: '100%', justifyContent: 'center', alignItems: 'center', marginTop: RFPercentage(3), backgroundColor: Colors.funBlue, padding: 6}}>
                 <Text style={{fontSize: RFValue(15), color: 'white'}}>Choose From My Prescription</Text>
             </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity style={{width: '100%'}} onPress={props.takeImage}>
             <View style={{width: '100%', justifyContent: 'center', alignItems: 'center', marginTop: RFPercentage(3), backgroundColor: Colors.funBlue, padding: 6}}>
                 <Text style={{fontSize: RFValue(15), color: 'white'}}>Upload Prescription</Text>

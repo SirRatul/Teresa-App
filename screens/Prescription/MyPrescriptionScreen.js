@@ -93,9 +93,9 @@ const MyPrescriptionScreen = (props) => {
         })
     }
     return <ScrollView style={{ flex: 1 }} refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={getUserData} />
+        <RefreshControl refreshing={isRefreshing} onRefresh={getUserData}/>
       }>
-        <View style={styles.screen}>
+        <View style={styles.screen, {backgroundColor: todayPrescription.length == 0 && yesterdayPrescription.length == 0 && otherDayPrescription.length == 0 && '#F8F9FB'}}>
             {errorMessage &&<CustomAlert message={errorMessage} onClear={modalHandler}/>}
             {photoShowModal &&<PhotoShowModal onClear={modalHandler} imageUri={pickedImage} prescriptionId={prescriptionId} orderHandler={orderHandler}/>}
             {
@@ -160,7 +160,14 @@ const MyPrescriptionScreen = (props) => {
                 }
                 </>
                 :
-                <Image style={{width: Dimensions.get('window').width, height: Dimensions.get('window').height, flex: 1, resizeMode: 'contain'}} source={NoPrescription}/>
+                <>
+                <Image style={{width: Dimensions.get('window').width, height: Dimensions.get('window').height - RFPercentage(30), resizeMode: 'contain'}} source={NoPrescription}/>
+                <TouchableOpacity onPress={() => {props.navigation.navigate('UploadPrescription')}} style={{marginBottom: RFPercentage(3)}}>
+                    <View style={{justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3), backgroundColor: Colors.funBlue, padding: 6}}>
+                        <Text style={{fontSize: RFValue(18), color: 'white'}}>Upload Prescription</Text>
+                    </View>
+                </TouchableOpacity> 
+                </>
             }
             <AntDesign name="closecircle" size={20} color={Colors.funBlue} style={{position: 'absolute', top: RFValue(10), right: RFPercentage(3), alignSelf: 'flex-end'}} onPress={() => {
                 props.navigation.navigate('Home')
@@ -178,7 +185,8 @@ MyPrescriptionScreen.navigationOptions = (navData) => {
 
 const styles = StyleSheet.create({
     screen: {
-        flex: 1
+        flex: 1,
+        
     }
 })
 

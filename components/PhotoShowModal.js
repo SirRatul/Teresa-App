@@ -39,11 +39,11 @@ const PhotoShowModal = (props) => {
                 // downloadFile('https://avatars2.githubusercontent.com/u/7970947?v=3&s=460')
                 downloadFile('https://'+props.imageUri)
             }}/>
-            <TouchableOpacity onPress={() => {props.orderHandler('https://'+props.imageUri)}} style={{marginBottom: RFValue(20)}}>
+            {/* <TouchableOpacity onPress={() => {props.orderHandler('https://'+props.imageUri)}} style={{marginBottom: RFValue(20)}}>
                 <View style={{justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3), marginTop: RFPercentage(3), backgroundColor: Colors.funBlue, padding: 6}}>
                     <Text style={{fontSize: RFValue(18), color: 'white'}}>Order Medicine</Text>
                 </View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <AntDesign name="closecircle" size={20} color={Colors.funBlue} style={{position: 'absolute', top: RFValue(10), right: RFValue(10), alignSelf: 'flex-end'}} onPress={props.onClear}/>
         </View>
     </Modal>
