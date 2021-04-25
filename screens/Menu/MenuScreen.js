@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from 'rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign, FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIcons} from '@expo/vector-icons';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
+import * as Notifications from 'expo-notifications';
 import Colors from '../../constants/Colors';
 import Avatar from '../../assets/icons/Avatar.png';
 import Profile from '../../assets/icons/metro-profile.png';
@@ -133,6 +134,8 @@ const MenuScreen = (props) => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
                 AsyncStorage.removeItem('userData')
+                AsyncStorage.removeItem('activeRoutine')
+                Notifications.cancelAllScheduledNotificationsAsync()
                 props.navigation.navigate('Auth')
             }}>
                 <View style={{flexDirection: 'row', justifyContent: 'center', alignItems: 'center', padding: 5, marginHorizontal: RFPercentage(3), marginVertical: RFPercentage(2), borderWidth: 1, borderColor: Colors.alto, backgroundColor: Colors.blackSqueeze}}>

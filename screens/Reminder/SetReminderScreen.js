@@ -1,5 +1,7 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { StyleSheet, Text, View, Image, Platform, ScrollView, TextInput, TouchableWithoutFeedback, TouchableOpacity, ActionSheetIOS } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import {Picker} from '@react-native-picker/picker';
 import Avatar from '../../assets/icons/Avatar.png';
 import Colors from '../../constants/Colors';
@@ -7,8 +9,12 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import { FontAwesome, AntDesign, MaterialCommunityIcons } from '@expo/vector-icons';
 import moment from 'moment';
+import CustomAlert from '../../components/CustomAlert';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import {APP_BACKEND_URL} from "@env"
 
 const SetReminderScreen = (props) => {
+    const [token, setToken] = useState('')
     const [itemName, setItemName] = useState('')
     const [startDate, setStartDate] = useState(new Date())
     const [startDatePickerShow, setStartDatePickerShow] = useState(false)
@@ -44,10 +50,31 @@ const SetReminderScreen = (props) => {
     const [pillQuantity, setPillQuantity] = useState('')
     const [notificationState, setNotificationState] = useState("On")
     const [notificationTimeState, setNotificationTimeState] = useState("15")
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [isLoading, setIsLoading] = useState(false)
+    const getUserData = async() => {
+        const userData = await AsyncStorage.getItem('userData')
+        const tempUserData = JSON.parse(userData)
+        setToken(tempUserData.token)
+    }
+    const authAxios = axios.create({
+        baseURL: APP_BACKEND_URL,
+        headers: {
+            Authorization : `Bearer ${token}`
+        }
+    })
+    useEffect(()=>{
+        getUserData()
+    }, [])
     const startDateChange = (event, selectedValue) => {
         setStartDatePickerShow(Platform.OS === 'ios')
         const selectedDate = selectedValue || startDate
         setStartDate(selectedDate)
+        if(continuity){
+            setEndDate(moment(selectedDate).add(continuity-1, 'days'))
+        } else {
+            setEndDate(selectedDate)
+        }
     }
     const showStartDatepicker = () => {
         setStartDatePickerShow(true)
@@ -108,9 +135,74 @@ const SetReminderScreen = (props) => {
             setTimePicker5Show(true)
         }
     }
+    const submitHandler = async() => {
+        let times = timeList.slice(0, timesPerDay)
+        for(var i = 0; i < times.length; i++){
+            times[i] = moment(times[i].time).format('hh:mm a')
+        }
+        setIsLoading(true)
+        try {
+            const response = await authAxios.post(APP_BACKEND_URL+'routines/medicine', {
+                routineArray: [
+                    {
+                        itemName,
+                        startDate: moment(startDate).format('YYYY-MM-DD'),
+                        endDate: moment(endDate).format('YYYY-MM-DD'),
+                        continuity,
+                        meal: mealState,
+                        timesPerDay,
+                        times,
+                        pillQuantity,
+                        unit,
+                        notification: notificationState == 'On' ? true : false,
+                        notificationBefore: notificationTimeState
+                    }
+                ]
+            })
+            setIsLoading(false)
+            setItemName('')
+            setStartDate(new Date())
+            setContinuity('')
+            setEndDate(new Date())
+            setUnit('')
+            setMealState("Before")
+            setTimesPerDay('1')
+            setTimeList([
+                {
+                  time: new Date()
+                },
+                {
+                  time: new Date()
+                },
+                {
+                  time: new Date()
+                },
+                {
+                  time: new Date()
+                },
+                {
+                  time: new Date()
+                }
+            ])
+            setPillQuantity('')
+            setNotificationState("On")
+            setNotificationTimeState("15")
+            setErrorMessage('Routine Created Successfully')
+        } catch (error) {
+            setIsLoading(false)
+            setErrorMessage(error.response.data.message)
+        }
+    }
+    const modalHandler = () => {
+        setErrorMessage(null)
+        props.navigation.navigate('Reminder', {
+            screen: 'ActiveReminder'
+        })
+    }
     return <View style={styles.screen}>
         <ScrollView style={styles.screen}>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginTop: RFPercentage(8), paddingVertical: 5}}>
+                {errorMessage &&<CustomAlert message={errorMessage} onClear={modalHandler}/>}
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
                     <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Item Name</Text>
                 </View>
@@ -123,11 +215,11 @@ const SetReminderScreen = (props) => {
                     <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Start Date</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze, flexDirection: 'row'}}>
-                    <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
-                        <TouchableWithoutFeedback onPress={showStartDatepicker}>
+                    <TouchableWithoutFeedback onPress={showStartDatepicker}>
+                        <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
                             <Text style={{paddingHorizontal: 8}}>{moment(startDate).format('DD/MM/YYYY')}</Text>
-                        </TouchableWithoutFeedback>
-                    </View>
+                        </View>
+                    </TouchableWithoutFeedback>
                     <FontAwesome name="calendar" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={showStartDatepicker} />
                 </View>
             </View>
@@ -136,7 +228,10 @@ const SetReminderScreen = (props) => {
                     <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Continuity</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={continuity} onChangeText={text => setContinuity(text.replace(/[^0-9]/g, ''))} keyboardType='numeric'/>
+                    <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={continuity} onChangeText={(text) => {
+                        setContinuity(text.replace(/[^0-9]/g, ''))
+                        setEndDate(moment(startDate).add(parseInt(text.replace(/[^0-9]/g, ''))-1, 'days'))
+                    }} keyboardType='numeric'/>
                     <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30)}}>
                         <AntDesign name="caretup" size={12} color={Colors.danube} onPress={() => {
                             console.log('increase continuity')
@@ -153,11 +248,11 @@ const SetReminderScreen = (props) => {
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze, flexDirection: 'row'}}>
                     <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
-                        <TouchableWithoutFeedback onPress={showEndDatepicker}>
+                        {/* <TouchableWithoutFeedback onPress={showEndDatepicker}> */}
                             <Text style={{paddingHorizontal: 8}}>{moment(endDate).format('DD/MM/YYYY')}</Text>
-                        </TouchableWithoutFeedback>
+                        {/* </TouchableWithoutFeedback> */}
                     </View>
-                    <FontAwesome name="calendar" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={showEndDatepicker} />
+                    {/* <FontAwesome name="calendar" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={showEndDatepicker} /> */}
                 </View>
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
@@ -367,7 +462,7 @@ const SetReminderScreen = (props) => {
                     }
                 </View>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={submitHandler}>
                 <View style={{justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3), marginTop: RFPercentage(3), marginBottom: RFPercentage(6), backgroundColor: Colors.funBlue, padding: 6}}>
                     <Text style={{fontSize: RFValue(16), color: 'white'}}>Set</Text>
                 </View>
@@ -425,6 +520,9 @@ const SetReminderScreen = (props) => {
                 props.navigation.navigate('Home')
             }}/>
         </ScrollView>
+        {isLoading &&
+            <LoadingSpinner/>
+        }
     </View>
 }
 

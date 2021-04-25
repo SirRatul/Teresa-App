@@ -41,6 +41,9 @@ const OrderList = (props) => {
     useEffect(()=>{
         getUserData()
     }, [])
+    const modalHandler = () => {
+        setErrorMessage(null)
+    }
     return <ScrollView style={[styles.screen, {backgroundColor: 'white'}]} refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={getUserData} />
     }>
