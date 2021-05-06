@@ -23,26 +23,40 @@ const ActiveReminderScreen = (props) => {
           }
         }
     })
-    const timeFormat = (timeString, notificationTime) => {
-        var time1 = timeString.split(' ')
-        var time = time1[0].split(':')
+    Notifications.setNotificationCategoryAsync('welcome', [
+        {
+          identifier: 'one',
+          buttonTitle: 'Yes',
+          options: {
+            isDestructive: false,
+            isAuthenticationRequired: false
+          }
+        },
+        {
+          identifier: 'two',
+          buttonTitle: 'No',
+          options: {
+            isDestructive: true,
+            isAuthenticationRequired: false
+          }
+        }
+        ]).then(() => {
+            console.log(`Category 'welcome' created!`);
+        }).catch(() => {
+          console.log(`Category 'welcome' not created!`);
+    });
+    const timeFormat = (timeString) => {
+        var time = timeString.split(":");
+        var hour = time[0] % 12 || 12;
+        var minute = time[1];
+        var ampm = time[0] < 12 || time[0] === 24 ? "AM" : "PM";
+        return hour + ":" + minute + " " + ampm;
+    }
+    const notificationTime = (timeString, notificationTime) => {
+        var time = timeString.split(':')
         let hour, minute
-        if(time1[1] == 'am'){
-            if(time[0] == '12'){
-                hour = 0
-            } else {
-                hour = time[0]
-            }
-            minute = time[1]
-        }
-        if(time1[1] == 'pm'){
-            if(time[0] != '12'){
-                hour = 12 + parseInt(time[0])
-            } else {
-                hour = time[0]
-            }
-            minute = time[1]
-        }
+        hour = time[0]
+        minute = time[1]
         var day = new Date();
         day.setHours(hour)
         day.setMinutes(minute)
@@ -68,20 +82,38 @@ const ActiveReminderScreen = (props) => {
                 }
             })
             setIsLoading(false)
-            setRoutineList(response.data.message.jsonActiveRoutines)
+            setRoutineList(response.data.message.activeRoutines)
             Notifications.cancelAllScheduledNotificationsAsync()
-            response.data.message.jsonActiveRoutines.forEach((entry) => {
+            /* Notifications.scheduleNotificationAsync({
+                content: {
+                    title: 'test notification',
+                    data: {
+                        routineId: 'entry._id'
+                    },
+                    categoryIdentifier: `welcome`
+                },
+                trigger: { 
+                    hour: 1,
+                    minute: 10,
+                    repeats: true
+                }
+            }) */
+            response.data.message.activeRoutines.forEach((entry) => {
                 if(entry.notification){
                     entry.times.forEach((time) => {
-                        times = timeFormat(time, entry.notificationBefore)
-                        timeString = times.split(':')
+                        timeString = notificationTime(time, entry.notificationBefore).split(':')
+                        console.log(entry.unit+' unit '+entry.itemName+' at '+timeFormat(time)+' '+entry.meal+' meal')
                         Notifications.scheduleNotificationAsync({
                             content: {
-                                title: entry.unit+' unit '+entry.itemName+' at '+timeFormat(time, entry.notificationBefore)+' '+entry.meal+' meal'
-                            }, 
+                                title: entry.unit+' unit '+entry.itemName+' at '+timeFormat(time)+' '+entry.meal+' meal',
+                                data: {
+                                    routineId: entry._id
+                                },
+                                categoryIdentifier: `welcome`
+                            },
                             trigger: { 
-                                hour: parseInt(timeString[0]),
-                                minute: parseInt(timeString[1]),
+                                hour: parseInt(timeString[0], 10),
+                                minute: parseInt(timeString[1], 10),
                                 repeats: true
                             }
                         })
@@ -89,7 +121,7 @@ const ActiveReminderScreen = (props) => {
                 }
             })
             AsyncStorage.setItem('activeRoutine', JSON.stringify({
-                activeRoutine: response.data.message.jsonActiveRoutines.filter(routine => routine.notification == true)
+                activeRoutine: response.data.message.activeRoutines.filter(routine => routine.notification == true)
             }))
         } catch (error) {
             setIsLoading(false)
@@ -104,6 +136,16 @@ const ActiveReminderScreen = (props) => {
             Authorization : `Bearer ${token}`
         }
     })
+    const reminderTimesFormatter = (reminderTimes) => {
+        var time = reminderTimes.split(",");
+        timeString = ''
+        time.forEach((element) => {
+            if(element.trim().length > 0){
+                timeString = timeString + timeFormat(element.trim()) + ' '
+            }
+        });
+        return timeString.trim()
+    }
     useEffect(()=>{
         getUserData()
     }, [deleteRoutine, updateRoutine])
@@ -126,6 +168,27 @@ const ActiveReminderScreen = (props) => {
         const backgroundSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
           //outside app
           console.log('backgroundSubscription')
+          if(response.actionIdentifier == 'one'){
+            console.log('one button pressed')
+            console.log(response.notification.request.identifier)
+            updateRoutineStaus(response.notification.request.content.data.routineId, "On Time")
+            Notifications.dismissNotificationAsync(response.notification.request.identifier).then((response) => {
+              console.log('dismissNotificationAsync')
+              console.log(response)
+            }).catch((error) => {
+              console.log(error)
+            })
+          } else if(response.actionIdentifier == 'two'){
+            console.log('two button pressed')
+            console.log(response.notification.request.identifier)
+            updateRoutineStaus(response.notification.request.content.data.routineId, "Late")
+            Notifications.dismissNotificationAsync(response.notification.request.identifier).then((response) => {
+                console.log('dismissNotificationAsync')
+                console.log(response)
+              }).catch((error) => {
+                console.log(error)
+            })
+          }
           // console.log(response)
         });
         const foregroundSubscription = Notifications.addNotificationReceivedListener((notification) => {
@@ -155,6 +218,20 @@ const ActiveReminderScreen = (props) => {
         try {
             const response = await authAxios.patch(APP_BACKEND_URL+'routines/medicine/'+routineId, {
                 notification: !notificationValue
+            })
+            setIsLoading(false)
+            setErrorMessage('Routine Updated Successfully')
+            getUserData()
+        } catch (error) {
+            setIsLoading(false)
+            setErrorMessage(error.response.data.message)
+        }
+    }
+    const updateRoutineStaus = async(routineId, status) => {
+        setIsLoading(true)
+        try {
+            const response = await authAxios.patch(APP_BACKEND_URL+'routines/medicine/'+routineId, {
+                lastTaken: status
             })
             setIsLoading(false)
             setErrorMessage('Routine Updated Successfully')
@@ -231,16 +308,25 @@ const ActiveReminderScreen = (props) => {
                                     </TouchableOpacity>
                                 </View>
                             </View>
-                            {/* <View style={{borderWidth: 1, alignSelf: 'flex-start', padding: 2, borderRadius: 5, borderColor: Colors.silver}}>
-                                <Text style={{fontSize: RFValue(10),color: Colors.butterflyBush}}>Next pill time at 9:00 PM</Text>
-                            </View> */}
+                            <View style={{borderWidth: 1, alignSelf: 'flex-start', padding: 2, borderRadius: 5, borderColor: Colors.silver}}>
+                                <Text style={{fontSize: RFValue(10),color: Colors.butterflyBush}}>Next pill time at {timeFormat(itemData.item.nextPillTime)}</Text>
+                            </View>
                             <Text style={{color: Colors.logan}}>{itemData.item.unit} pill {itemData.item.meal} meal</Text>
                             {/* <Text style={{color: Colors.logan}}>3 pills left</Text> */}
                             <Text style={{color: Colors.logan}}>{moment(itemData.item.startDate).format('D MMMM')} - {moment(itemData.item.endDate).format('D MMMM')}</Text>
-                            <Text style={{color: Colors.logan}}>{itemData.item.reminderTimes}</Text>
-                            {/* <View style={{borderRadius: 5, alignSelf: 'flex-start', marginTop: 5, backgroundColor: Colors.japaneseLaurel, paddingVertical: 3, paddingHorizontal: 10}}>
-                                <Text style={{color: 'white'}}>On Time</Text>
-                            </View> */}
+                            <Text style={{color: Colors.logan}}>{reminderTimesFormatter(itemData.item.reminderTimes)}</Text>
+                            {
+                                itemData.item.lastTaken == 'On Time' &&
+                                <View style={{borderRadius: 5, alignSelf: 'flex-start', marginTop: 5, backgroundColor: Colors.japaneseLaurel, paddingVertical: 3, paddingHorizontal: 10}}>
+                                    <Text style={{color: 'white'}}>On Time</Text>
+                                </View>
+                            }
+                            {
+                                itemData.item.lastTaken == 'Late' &&
+                                <View style={{borderRadius: 5, alignSelf: 'flex-start', marginTop: 5, backgroundColor: 'red', paddingVertical: 3, paddingHorizontal: 10}}>
+                                    <Text style={{color: 'white'}}>Late</Text>
+                                </View>
+                            }
                         </View>
                     </View>
                 }}/>

@@ -138,7 +138,7 @@ const SetReminderScreen = (props) => {
     const submitHandler = async() => {
         let times = timeList.slice(0, timesPerDay)
         for(var i = 0; i < times.length; i++){
-            times[i] = moment(times[i].time).format('hh:mm a')
+            times[i] = moment(times[i].time).format('HH:mm')
         }
         setIsLoading(true)
         try {
@@ -150,6 +150,7 @@ const SetReminderScreen = (props) => {
                         endDate: moment(endDate).format('YYYY-MM-DD'),
                         continuity,
                         meal: mealState,
+                        lastTaken: "On Time",
                         timesPerDay,
                         times,
                         pillQuantity,

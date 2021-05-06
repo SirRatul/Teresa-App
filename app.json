@@ -11,6 +11,9 @@
       "image": "./assets/splash.png",
       "resizeMode": "cover"
     },
+    "notification": {
+      "icon": "./assets/notification-icon.png"
+    },
     "updates": {
       "fallbackToCacheTimeout": 10
     },
@@ -25,7 +28,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.ocean_blue.Teresa"
+      "package": "com.ocean_blue.Teresa",
+      "useNextNotificationsApi": true
     },
     "web": {
       "favicon": "./assets/favicon.png"

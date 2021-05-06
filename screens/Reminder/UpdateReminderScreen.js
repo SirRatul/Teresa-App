@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { StyleSheet, Text, View, Image, ScrollView, TouchableWithoutFeedback, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, TouchableWithoutFeedback, TextInput, TouchableOpacity, ActionSheetIOS } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Picker} from '@react-native-picker/picker';
 import axios from 'axios';
@@ -18,25 +18,10 @@ const UpdateReminderScreen = (props) => {
         if(!timeString){
             return new Date()
         }
-        var time1 = timeString.split(' ')
-        var time = time1[0].split(':')
+        var time = timeString.split(':')
         let hour, minute
-        if(time1[1] == 'am'){
-            if(time[0] == '12'){
-                hour = 0
-            } else {
-                hour = time[0]
-            }
-            minute = time[1]
-        }
-        if(time1[1] == 'pm'){
-            if(time[0] != '12'){
-                hour = 12 + parseInt(time[0])
-            } else {
-                hour = time[0]
-            }
-            minute = time[1]
-        }
+        hour = time[0]
+        minute = time[1]
         var day = new Date();
         day.setHours(hour)
         day.setMinutes(minute)
@@ -164,7 +149,7 @@ const UpdateReminderScreen = (props) => {
     const submitHandler = async() => {
         let times = timeList.slice(0, timesPerDay)
         for(var i = 0; i < times.length; i++){
-            times[i] = moment(times[i].time).format('hh:mm a')
+            times[i] = moment(times[i].time).format('HH:mm')
         }
         setIsLoading(true)
         try {
@@ -198,12 +183,12 @@ const UpdateReminderScreen = (props) => {
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginVertical: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Start Date</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Start Date</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze, flexDirection: 'row'}}>
                     <TouchableWithoutFeedback onPress={showStartDatepicker}>
-                        <View style={{width: '100%', marginLeft: 5}}>
-                            <Text style={{fontSize: RFValue(23)}}>{moment(startDate).format('DD/MM/YYYY')}</Text>
+                        <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
+                            <Text style={{paddingHorizontal: 8}}>{moment(startDate).format('DD/MM/YYYY')}</Text>
                         </View>
                     </TouchableWithoutFeedback>
                     <FontAwesome name="calendar" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={showStartDatepicker} />
@@ -211,10 +196,10 @@ const UpdateReminderScreen = (props) => {
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Continuity</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Continuity</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <TextInput style={{width: '100%'}} value={continuity} onChangeText={(text) => {
+                    <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={continuity} onChangeText={(text) => {
                         setContinuity(text.replace(/[^0-9]/g, ''))
                         setEndDate(moment(startDate).add(parseInt(text.replace(/[^0-9]/g, ''))-1, 'days'))
                     }} keyboardType='numeric'/>
@@ -230,12 +215,12 @@ const UpdateReminderScreen = (props) => {
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>End Date</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>End Date</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze, flexDirection: 'row'}}>
-                    <View style={{width: '100%', marginLeft: 5}}>
+                    <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
                     {/* <TouchableWithoutFeedback onPress={showEndDatepicker}> */}
-                        <Text style={{fontSize: RFValue(23)}}>{moment(endDate).format('DD/MM/YYYY')}</Text>
+                        <Text style={{paddingHorizontal: 8}}>{moment(endDate).format('DD/MM/YYYY')}</Text>
                     {/* </TouchableWithoutFeedback> */}
                     </View>
                     {/* <FontAwesome name="calendar" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={showEndDatepicker} /> */}
@@ -243,26 +228,52 @@ const UpdateReminderScreen = (props) => {
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Meal</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Meal</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <Picker
+                {Platform.OS == 'android' ?
+                        <>
+                        <Picker
                         selectedValue={mealState}
                         style={{width: '100%', height: 30, backgroundColor: 'transparent'}}
                         onValueChange={(itemValue, itemIndex) => setMealState(itemValue)}
-                    >
-                        <Picker.Item color={Colors.danube} label="Before" value="Before" />
-                        <Picker.Item color={Colors.danube} label="After" value="After" />
-                    </Picker>
-                    <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6)}} size={12} color={Colors.danube}/>
+                        >
+                            <Picker.Item color={Colors.danube} label="Before Meal" value="Before" />
+                            <Picker.Item color={Colors.danube} label="After Meal" value="After" />
+                        </Picker>
+                        <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6)}} size={12} color={Colors.danube}/>
+                        </>
+                        :
+                        <TouchableOpacity onPress={() => {
+                            ActionSheetIOS.showActionSheetWithOptions(
+                                {
+                                  options: ["Before Meal", "After Meal", "Cancel"],
+                                  destructiveButtonIndex: 2,
+                                  userInterfaceStyle: 'dark'
+                                },
+                                (buttonIndex) => {
+                                  if (buttonIndex === 0) {
+                                    setMealState('Before')
+                                  } else if (buttonIndex === 1) {
+                                    setMealState('After')
+                                  }
+                                }
+                            )                         
+                        }}>
+                            <View style={{width: '100%', flexDirection:'row'}}>
+                                <TextInput style={{width: '100%'}} value={mealState} keyboardType='numeric' editable={false} textAlign={'center'}/>
+                                <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6), top: RFValue(6)}} size={12} color={Colors.danube}/>
+                            </View>
+                        </TouchableOpacity>
+                    }
                 </View>
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Times Per Day</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Times Per Day</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <TextInput style={{width: '100%'}} value={timesPerDay} onChangeText={(text) => { 
+                    <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={timesPerDay} onChangeText={(text) => { 
                         if(text <= 5){
                             setTimesPerDay(text.replace(/[^0-9]/g, ''))
                             setTimesPerDayError(null)
@@ -284,19 +295,24 @@ const UpdateReminderScreen = (props) => {
                     </View>
                 </View>
             </View>
+            {timesPerDayError &&
+                <View style={{alignSelf: 'flex-start', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3)}}>
+                    <Text style={{fontSize: RFValue(16), color: 'red'}}>{timesPerDayError}</Text>
+                </View>
+            }
             {
                 Array.from({ length: timesPerDay }, (v, k) => (
                     <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}} key={k}>
                         <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                            <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Time {(k+1)}</Text>
+                            <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Time {(k+1)}</Text>
                         </View>
                         <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze, flexDirection: 'row'}}>
-                            <View style={{width: '100%', marginLeft: 5}}>
-                            <TouchableWithoutFeedback onPress={() => {
-                                showTimepicker(k)
-                            }}>
-                                <Text style={{fontSize: RFValue(23)}}>{moment(timeList[k].time).format('hh:mm A')}</Text>
-                            </TouchableWithoutFeedback>
+                            <View style={{width: '100%', marginLeft: 5, justifyContent: 'center', alignItems: 'center'}}>
+                                <TouchableWithoutFeedback onPress={() => {
+                                    showTimepicker(k)
+                                }}>
+                                    <Text style={{paddingHorizontal: 8}}>{moment(timeList[k].time).format('hh:mm A')}</Text>
+                                </TouchableWithoutFeedback>
                             </View>
                             <MaterialCommunityIcons name="clock" style={{alignItems: 'flex-end', marginLeft: -RFValue(25)}} size={18} color={Colors.danube} onPress={() => {
                                 showTimepicker(k)
@@ -307,35 +323,90 @@ const UpdateReminderScreen = (props) => {
             }
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Notification</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Notification</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <Picker
-                        selectedValue={notificationState}
-                        style={{width: '100%', height: 30, backgroundColor: 'transparent'}}
-                        onValueChange={(itemValue, itemIndex) => setNotificationState(itemValue)}
-                    >
-                        <Picker.Item color={Colors.danube} label="On" value="On" />
-                        <Picker.Item color={Colors.danube} label="Off" value="Off" />
-                    </Picker>
-                    <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6)}} size={12} color={Colors.danube}/>
+                    {Platform.OS == 'android' ?
+                        <>
+                        <Picker
+                            selectedValue={notificationState}
+                            style={{width: '100%', height: 30, backgroundColor: 'transparent'}}
+                            onValueChange={(itemValue, itemIndex) => setNotificationState(itemValue)}
+                        >
+                            <Picker.Item color={Colors.danube} label="On" value="On" />
+                            <Picker.Item color={Colors.danube} label="Off" value="Off" />
+                        </Picker>
+                        <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6)}} size={12} color={Colors.danube}/>
+                        </>
+                        :
+                        <TouchableOpacity onPress={() => {
+                            ActionSheetIOS.showActionSheetWithOptions(
+                                {
+                                  options: ["On", "Off", "Cancel"],
+                                  destructiveButtonIndex: 2,
+                                  userInterfaceStyle: 'dark'
+                                },
+                                (buttonIndex) => {
+                                  if (buttonIndex === 0) {
+                                    setNotificationState('On')
+                                  } else if (buttonIndex === 1) {
+                                    setNotificationState('Off')
+                                  }
+                                }
+                            )                         
+                        }}>
+                            <View style={{width: '100%', flexDirection:'row'}}>
+                                <TextInput style={{width: '100%'}} value={mealState} keyboardType='numeric' editable={false} textAlign={'center'}/>
+                                <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6), top: RFValue(6)}} size={12} color={Colors.danube}/>
+                            </View>
+                        </TouchableOpacity>
+                    }
                 </View>
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3), paddingVertical: 5}}>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'flex-start', backgroundColor: Colors.periwinkleGray, borderWidth: 2, borderColor: Colors.funBlue}}>
-                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5}}>Set Notification</Text>
+                    <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Set Notification</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <Picker
-                        selectedValue={notificationTimeState}
-                        style={{width: '100%', height: 30, backgroundColor: 'transparent'}}
-                        onValueChange={(itemValue, itemIndex) => setNotificationTimeState(itemValue)}
-                    >
-                        <Picker.Item color={Colors.danube} label="Before 15 mins" value="15" />
-                        <Picker.Item color={Colors.danube} label="Before 30 mins" value="30" />
-                        <Picker.Item color={Colors.danube} label="Before 1 hour" value="60" />
-                    </Picker>
                     <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6)}} size={12} color={Colors.danube}/>
+                    {Platform.OS == 'android' ?
+                        <>
+                        <Picker
+                            selectedValue={notificationTimeState}
+                            style={{width: '100%', height: 30, backgroundColor: 'transparent'}}
+                            onValueChange={(itemValue, itemIndex) => setNotificationTimeState(itemValue)}
+                        >
+                            <Picker.Item color={Colors.danube} label="Before 15 mins" value="15" />
+                            <Picker.Item color={Colors.danube} label="Before 30 mins" value="30" />
+                            <Picker.Item color={Colors.danube} label="Before 1 hour" value="60" />
+                        </Picker>
+                        <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6)}} size={12} color={Colors.danube}/>
+                        </>
+                        :
+                        <TouchableOpacity onPress={() => {
+                            ActionSheetIOS.showActionSheetWithOptions(
+                                {
+                                  options: ["Before 15 mins", "Before 30 mins", "Before 1 hour", "Cancel"],
+                                  destructiveButtonIndex: 3,
+                                  userInterfaceStyle: 'dark'
+                                },
+                                (buttonIndex) => {
+                                  if (buttonIndex === 0) {
+                                    setNotificationTimeState('15')
+                                  } else if (buttonIndex === 1) {
+                                    setNotificationTimeState('30')
+                                  } else if (buttonIndex === 2) {
+                                    setNotificationTimeState('60')
+                                  }
+                                }
+                            )                         
+                        }}>
+                            <View style={{width: '100%', flexDirection:'row'}}>
+                                <TextInput style={{width: '100%'}} value={mealState} keyboardType='numeric' editable={false} textAlign={'center'}/>
+                                <AntDesign name="caretdown" style={{position: "absolute", right: RFValue(6), top: RFValue(6)}} size={12} color={Colors.danube}/>
+                            </View>
+                        </TouchableOpacity>
+                    }
                 </View>
             </View>
             <TouchableOpacity onPress={submitHandler}>
@@ -343,11 +414,6 @@ const UpdateReminderScreen = (props) => {
                     <Text style={{fontSize: RFValue(16), color: 'white'}}>Update</Text>
                 </View>
             </TouchableOpacity>
-            {timesPerDayError &&
-                <View style={{alignSelf: 'flex-start', marginHorizontal: RFPercentage(3), marginBottom: RFPercentage(3)}}>
-                    <Text style={{fontSize: RFValue(16), color: 'red'}}>{timesPerDayError}</Text>
-                </View>
-            }
             {startDatePickerShow && <DateTimePicker
                 value={startDate}
                 mode={'date'}

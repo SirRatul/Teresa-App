@@ -1,43 +1,111 @@
-import React, {useEffect} from 'react';
-import { StyleSheet, Text, View, Button, Image, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import { StyleSheet, Text, View, Button, Image, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
+import axios from 'axios';
 import Avatar from '../../assets/icons/Avatar.png';
 import Logo from '../../assets/teresa.png';
 import Calendar from '../../assets/icons/Calendar.png';
 import UploadPrescription from '../../assets/icons/UploadPrescriptionCard.png';
 import Colors from '../../constants/Colors';
 import { FontAwesome, Entypo } from '@expo/vector-icons';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import CustomAlert from '../../components/CustomAlert';
+import {APP_BACKEND_URL} from "@env"
 
 const HomeScreen = (props) => {
+    const [token, setToken] = useState('')
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [upcomingSchedules, setUpcomingSchedules] = useState([])
+    const [upcomingScheduleNumber, setUpcomingScheduleNumber] = useState(null)
     const getUserData = async() => {
         const userData = await AsyncStorage.getItem('userData')
         const tempUserData = JSON.parse(userData)
+        setToken(tempUserData.token)
         props.navigation.setParams({
             name: tempUserData.firstName+' '+tempUserData.lastName
         })
+        setIsRefreshing(true)
+        setIsLoading(true)
+        try {
+            const response = await axios.get(APP_BACKEND_URL+'routines/upcoming/me', {
+                headers: {
+                    Authorization : `Bearer ${tempUserData.token}`
+                }
+            })
+            setIsLoading(false)
+            setUpcomingSchedules(response.data.message.upcomingSchedules)
+            setUpcomingScheduleNumber(response.data.message.numberOfUpcomings)
+        } catch (error) {
+            setIsLoading(false)
+            setErrorMessage(error.response.data.message)
+        }
+        setIsRefreshing(false)
+    }
+    const getUpcomingReminder = async() => {
+        setIsRefreshing(true)
+        setIsLoading(true)
+        try {
+            const response = await axios.get(APP_BACKEND_URL+'routines/upcoming/me', {
+                headers: {
+                    Authorization : `Bearer ${token}`
+                }
+            })
+            setIsLoading(false)
+            setUpcomingSchedules(response.data.message.upcomingSchedules)
+            setUpcomingScheduleNumber(response.data.message.numberOfUpcomings)
+        } catch (error) {
+            setIsLoading(false)
+            setErrorMessage(error.response.data.message)
+        }
+        setIsRefreshing(false)
     }
     useEffect(()=>{
         getUserData()
     }, [])
+    useEffect(()=>{
+        getUpcomingReminder()
+    }, [])
+    const timeFormat = (timeString) => {
+        var time = timeString.split(":");
+        var hour = time[0] % 12 || 12;
+        var minute = time[1];
+        var ampm = time[0] < 12 || time[0] === 24 ? "AM" : "PM";
+        return hour + ":" + minute + " " + ampm;
+    }
+    const modalHandler = () => {
+        setErrorMessage(null)
+    }
     return <View style={styles.screen}>
-        <ScrollView style={styles.screen}>
-            <View style={styles.reminderCard}>
-                <View style={{width: '100%', backgroundColor: Colors.funBlue, paddingVertical: RFPercentage(1)}}>
-                    <Text style={{fontSize: RFValue(16), color: 'white', marginLeft: 5}}>Next Reminder (2 reminders)</Text>
-                </View>
-                <View style={{width: '100%', backgroundColor: 'white'}}>
-                    <View style={{flexDirection: 'row', width: '100%'}}>
-                        <Entypo name="dot-single" size={30} color={Colors.danube} />
-                        <Text style={{color: Colors.kimberly, marginTop: 5}}>1 unit Napa at 8:00 AM after meal</Text>
+        <ScrollView style={styles.screen} refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={getUpcomingReminder} />
+        }>
+            {errorMessage &&<CustomAlert message={errorMessage} onClear={modalHandler}/>}
+            {
+                upcomingSchedules.length > 0 &&
+                <View style={styles.reminderCard}>
+                    <View style={{width: '100%', backgroundColor: Colors.funBlue, paddingVertical: RFPercentage(1)}}>
+                        <Text style={{fontSize: RFValue(16), color: 'white', marginLeft: 5}}>Next Reminder ({upcomingScheduleNumber} reminders)</Text>
                     </View>
-                    <View style={{flexDirection: 'row', width: '100%'}}>
-                        <Entypo name="dot-single" size={30} color={Colors.danube} />
-                        <Text style={{color: Colors.kimberly, marginTop: 5}}>1 unit Pantonix at 10:00 AM before meal</Text>
+                    <View style={{width: '100%', backgroundColor: 'white'}}>
+                        {upcomingSchedules.map((item, i) => {
+                            return <View style={{flexDirection: 'row', width: '100%'}} key={i}>
+                                <Entypo name="dot-single" size={30} color={Colors.danube} />
+                                <Text style={{color: Colors.kimberly, marginTop: 5}}>{item.unit} unit {item.medicineName} at {timeFormat(item.time)} {item.meal} meal</Text>
+                            </View>
+                        })}
+                        {/* <View style={{flexDirection: 'row', width: '100%'}}>
+                            <Entypo name="dot-single" size={30} color={Colors.danube} />
+                            <Text style={{color: Colors.kimberly, marginTop: 5}}>1 unit Napa at 8:00 AM after meal</Text>
+                        </View> */}
                     </View>
+                    <FontAwesome name="close" size={20} color='white' style={{position: 'absolute', top: 5, right: RFValue(10), alignSelf: 'flex-end'}} onPress={() => {
+                        setUpcomingSchedules([])
+                    }}/>
                 </View>
-                <FontAwesome name="close" size={20} color='white' style={{position: 'absolute', top: 5, right: RFValue(10), alignSelf: 'flex-end'}}/>
-            </View>
+            }
             <View style={styles.card}>
                 <View style={styles.cardImage}>
                     <Image source={Logo} style={{width: RFValue(80), height: RFValue(80), resizeMode: 'contain' }}/>
@@ -73,6 +141,9 @@ const HomeScreen = (props) => {
                     </View>
                 </View>
             </TouchableOpacity>
+            {isLoading &&
+                <LoadingSpinner/>
+            }
         </ScrollView>
         <TouchableOpacity style={{position: 'absolute', bottom: RFValue(5), right: RFValue(15), alignSelf: 'flex-end'}} onPress={() => {
             props.navigation.navigate('SetReminder')
