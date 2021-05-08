@@ -203,12 +203,12 @@ const UpdateReminderScreen = (props) => {
                         setContinuity(text.replace(/[^0-9]/g, ''))
                         setEndDate(moment(startDate).add(parseInt(text.replace(/[^0-9]/g, ''))-1, 'days'))
                     }} keyboardType='numeric'/>
-                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30)}}>
+                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30), marginRight: 7}}>
                         <AntDesign name="caretup" size={12} color={Colors.danube} onPress={() => {
-                            console.log('increase continuity')
+                            setContinuity((parseInt(continuity)+1).toString())
                         }}/>
                         <AntDesign name="caretdown" size={12} color={Colors.danube} onPress={() => {
-                            console.log('decrease continuity')
+                            setContinuity((parseInt(continuity)-1).toString())
                         }}/>
                     </View>
                 </View>
@@ -281,14 +281,14 @@ const UpdateReminderScreen = (props) => {
                             setTimesPerDayError('Times per day value must be 1 to 5')
                         }
                     }} keyboardType='numeric' maxLength={1}/>
-                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30)}}>
+                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30), marginRight: 7}}>
                         <AntDesign name="caretup" size={12} color={Colors.danube} onPress={() => {
                             if(timesPerDay != 5){
                                 setTimesPerDay((parseInt(timesPerDay) + 1).toString())
                             }
                         }}/>
                         <AntDesign name="caretdown" size={12} color={Colors.danube} onPress={() => {
-                            if(timesPerDay > 0){
+                            if(timesPerDay > 1){
                                 setTimesPerDay((parseInt(timesPerDay) - 1).toString())
                             }
                         }}/>

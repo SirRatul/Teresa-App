@@ -280,6 +280,8 @@ const UploadPrescriptionScreen = (props) => {
                                 style={{width: '100%', color: Colors.danube}}
                                 value={x.medicineSN}
                                 onChangeText={text => handleInputChange('medicineSN', i, text)}
+                                placeholder='Ex: 1' 
+                                placeholderTextColor={Colors.danube}
                             />
                         </View>
                         <View style={{width: '25%', backgroundColor: Colors.blackSqueeze, padding: 6}}>
@@ -288,6 +290,8 @@ const UploadPrescriptionScreen = (props) => {
                                 value={x.unit}
                                 onChangeText={text => handleInputChange('unit', i, text)}
                                 editable={unitSelected ? true : false}
+                                placeholder='Ex: 1' 
+                                placeholderTextColor={Colors.danube}
                             />
                         </View>
                         <View style={{width: '25%', backgroundColor: Colors.blackSqueeze, padding: 6}}>
@@ -296,6 +300,8 @@ const UploadPrescriptionScreen = (props) => {
                                 value={x.day}
                                 onChangeText={text => handleInputChange('day', i, text)}
                                 editable={daySelected ? true : false}
+                                placeholder='Ex: 1' 
+                                placeholderTextColor={Colors.danube}
                             />
                         </View>
                         <View style={{width: '7%', flexDirection: 'row'}}>
@@ -321,6 +327,8 @@ const UploadPrescriptionScreen = (props) => {
                         onChangeText={text => setAdditionalNote(text)}
                         multiline = {true}
                         numberOfLines = {4}
+                        placeholder='Additional Note' 
+                        placeholderTextColor={Colors.danube}
                     />
                 </View>
             </View>
@@ -333,6 +341,8 @@ const UploadPrescriptionScreen = (props) => {
                         onChangeText={text => setDeliveryDetails(text)}
                         multiline = {true}
                         numberOfLines = {4}
+                        placeholder='Your Address' 
+                        placeholderTextColor={Colors.danube}
                     />
                 </View>
             </View>

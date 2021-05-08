@@ -9,7 +9,7 @@ import * as Notifications from 'expo-notifications';
 Notifications.setNotificationCategoryAsync('welcome', [
   {
     identifier: 'one',
-    buttonTitle: 'Yes',
+    buttonTitle: 'Okay',
     options: {
       isDestructive: false,
       isAuthenticationRequired: false
@@ -17,7 +17,7 @@ Notifications.setNotificationCategoryAsync('welcome', [
   },
   {
     identifier: 'two',
-    buttonTitle: 'No',
+    buttonTitle: 'Cancel',
     options: {
       isDestructive: true,
       isAuthenticationRequired: false

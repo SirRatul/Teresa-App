@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { StyleSheet, Text, View, Button, Image, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Platform, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import axios from 'axios';
@@ -96,25 +96,28 @@ const HomeScreen = (props) => {
                                 <Text style={{color: Colors.kimberly, marginTop: 5}}>{item.unit} unit {item.medicineName} at {timeFormat(item.time)} {item.meal} meal</Text>
                             </View>
                         })}
-                        {/* <View style={{flexDirection: 'row', width: '100%'}}>
-                            <Entypo name="dot-single" size={30} color={Colors.danube} />
-                            <Text style={{color: Colors.kimberly, marginTop: 5}}>1 unit Napa at 8:00 AM after meal</Text>
-                        </View> */}
                     </View>
                     <FontAwesome name="close" size={20} color='white' style={{position: 'absolute', top: 5, right: RFValue(10), alignSelf: 'flex-end'}} onPress={() => {
                         setUpcomingSchedules([])
                     }}/>
                 </View>
             }
+            <TouchableOpacity onPress={() => {
+                props.navigation.navigate('AboutTeresa')
+            }}>
             <View style={styles.card}>
                 <View style={styles.cardImage}>
                     <Image source={Logo} style={{width: RFValue(80), height: RFValue(80), resizeMode: 'contain' }}/>
                 </View>
                 <View style={{width: '60%'}}>
-                    <Text style={styles.cardContentText1}>What is Teresa</Text>
-                    <Text style={styles.cardContentText2}>Teresa is a medication management service, specially designed to assist people taking medicine in time. Proper meditation is very important to maintain healthcare tasks in line.</Text>
+                    <Text style={styles.cardContentText1}>Why Teresa</Text>
+                    <Text style={styles.cardContentText2}>Teresa will take care of your health the way your guardian or a nurse can do-</Text>
+                    <Text style={styles.cardContentText2}>1. Teresa will give you reminders…</Text>
+                    <Text style={styles.cardContentText2}>2. Teresa will keep all your records safe and easy to find for further reference…</Text>
+                    <Text style={styles.cardContentText2}>3. Teresa will give you the easiest medicine order… (More)</Text>
                 </View>
             </View>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => {
                 props.navigation.navigate('SetReminder')
             }}>

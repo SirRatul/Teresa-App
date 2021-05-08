@@ -28,6 +28,8 @@ const MyPrescriptionScreen = (props) => {
         const tempUserData = JSON.parse(userData)
         setToken(tempUserData.token)
         setIsRefreshing(true)
+        console.log(APP_BACKEND_URL)
+        console.log(tempUserData.token)
         try {
             const response = await axios.get(APP_BACKEND_URL+'files/prescription', {
                 headers: {
@@ -62,6 +64,7 @@ const MyPrescriptionScreen = (props) => {
             }
         } catch (error) {
             setErrorMessage(error.response.data.message)
+            console.log(error)
         }
         setIsRefreshing(false)
     }

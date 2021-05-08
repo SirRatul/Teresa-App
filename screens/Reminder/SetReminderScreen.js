@@ -18,10 +18,10 @@ const SetReminderScreen = (props) => {
     const [itemName, setItemName] = useState('')
     const [startDate, setStartDate] = useState(new Date())
     const [startDatePickerShow, setStartDatePickerShow] = useState(false)
-    const [continuity, setContinuity] = useState('')
+    const [continuity, setContinuity] = useState('1')
     const [endDate, setEndDate] = useState(new Date())
     const [endDatePickerShow, setEndDatePickerShow] = useState(false)
-    const [unit, setUnit] = useState('')
+    const [unit, setUnit] = useState('1')
     const [mealState, setMealState] = useState("Before")
     const [timesPerDay, setTimesPerDay] = useState('1')
     const [timesPerDayError, setTimesPerDayError] = useState(null)
@@ -51,6 +51,7 @@ const SetReminderScreen = (props) => {
     const [notificationState, setNotificationState] = useState("On")
     const [notificationTimeState, setNotificationTimeState] = useState("15")
     const [errorMessage, setErrorMessage] = useState(null)
+    const [submitStatus, setSubmitStatus] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const getUserData = async() => {
         const userData = await AsyncStorage.getItem('userData')
@@ -136,69 +137,76 @@ const SetReminderScreen = (props) => {
         }
     }
     const submitHandler = async() => {
-        let times = timeList.slice(0, timesPerDay)
-        for(var i = 0; i < times.length; i++){
-            times[i] = moment(times[i].time).format('HH:mm')
-        }
-        setIsLoading(true)
-        try {
-            const response = await authAxios.post(APP_BACKEND_URL+'routines/medicine', {
-                routineArray: [
+        if(!itemName || !unit || !timesPerDay || !pillQuantity){
+            setErrorMessage('Please fill up all the fields')
+        } else {
+            let times = timeList.slice(0, timesPerDay)
+            for(var i = 0; i < times.length; i++){
+                times[i] = moment(times[i].time).format('HH:mm')
+            }
+            setIsLoading(true)
+            try {
+                const response = await authAxios.post(APP_BACKEND_URL+'routines/medicine', {
+                    routineArray: [
+                        {
+                            itemName,
+                            startDate: moment(startDate).format('YYYY-MM-DD'),
+                            endDate: moment(endDate).format('YYYY-MM-DD'),
+                            continuity,
+                            meal: mealState,
+                            lastTaken: "On Time",
+                            timesPerDay,
+                            times,
+                            pillQuantity,
+                            unit,
+                            notification: notificationState == 'On' ? true : false,
+                            notificationBefore: notificationTimeState
+                        }
+                    ]
+                })
+                setIsLoading(false)
+                setItemName('')
+                setStartDate(new Date())
+                setContinuity('')
+                setEndDate(new Date())
+                setUnit('')
+                setMealState("Before")
+                setTimesPerDay('1')
+                setTimeList([
                     {
-                        itemName,
-                        startDate: moment(startDate).format('YYYY-MM-DD'),
-                        endDate: moment(endDate).format('YYYY-MM-DD'),
-                        continuity,
-                        meal: mealState,
-                        lastTaken: "On Time",
-                        timesPerDay,
-                        times,
-                        pillQuantity,
-                        unit,
-                        notification: notificationState == 'On' ? true : false,
-                        notificationBefore: notificationTimeState
+                    time: new Date()
+                    },
+                    {
+                    time: new Date()
+                    },
+                    {
+                    time: new Date()
+                    },
+                    {
+                    time: new Date()
+                    },
+                    {
+                    time: new Date()
                     }
-                ]
-            })
-            setIsLoading(false)
-            setItemName('')
-            setStartDate(new Date())
-            setContinuity('')
-            setEndDate(new Date())
-            setUnit('')
-            setMealState("Before")
-            setTimesPerDay('1')
-            setTimeList([
-                {
-                  time: new Date()
-                },
-                {
-                  time: new Date()
-                },
-                {
-                  time: new Date()
-                },
-                {
-                  time: new Date()
-                },
-                {
-                  time: new Date()
-                }
-            ])
-            setPillQuantity('')
-            setNotificationState("On")
-            setNotificationTimeState("15")
-            setErrorMessage('Routine Created Successfully')
-        } catch (error) {
-            setIsLoading(false)
-            setErrorMessage(error.response.data.message)
+                ])
+                setPillQuantity('')
+                setNotificationState("On")
+                setNotificationTimeState("15")
+                setSubmitStatus(true)
+                setErrorMessage('Routine Created Successfully')
+            } catch (error) {
+                setIsLoading(false)
+                setErrorMessage(error.response.data.message)
+            }
         }
     }
     const modalHandler = () => {
         setErrorMessage(null)
-        props.navigation.navigate('Reminder', {
-            screen: 'ActiveReminder'
-        })
+        if(submitStatus){
+            props.navigation.navigate('Reminder', {
+                screen: 'ActiveReminder'
+            })
+        }
     }
     return <View style={styles.screen}>
         <ScrollView style={styles.screen}>
@@ -208,7 +216,7 @@ const SetReminderScreen = (props) => {
                     <Text style={{color: Colors.resolutionBlue, marginLeft: 5, marginVertical: 5, paddingLeft: 12}}>Item Name</Text>
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
-                    <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={itemName} onChangeText={text => setItemName(text)}/>
+                    <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={itemName} onChangeText={text => setItemName(text)} placeholder='Name' placeholderTextColor={Colors.danube}/>
                 </View>
             </View>
             <View style={{flexDirection: 'row', marginHorizontal: RFPercentage(3), marginVertical: RFPercentage(3), paddingVertical: 5}}>
@@ -230,15 +238,21 @@ const SetReminderScreen = (props) => {
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
                     <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={continuity} onChangeText={(text) => {
-                        setContinuity(text.replace(/[^0-9]/g, ''))
-                        setEndDate(moment(startDate).add(parseInt(text.replace(/[^0-9]/g, ''))-1, 'days'))
+                        if(text != 0){
+                            setContinuity(text.replace(/[^0-9]/g, ''))
+                            setEndDate(moment(startDate).add(parseInt(text.replace(/[^0-9]/g, ''))-1, 'days'))
+                        }
                     }} keyboardType='numeric'/>
-                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30)}}>
+                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30), marginRight: 7}}>
                         <AntDesign name="caretup" size={12} color={Colors.danube} onPress={() => {
-                            console.log('increase continuity')
+                            setContinuity((parseInt(continuity)+1).toString())
+                            setEndDate(moment(startDate).add(continuity, 'days'))
                         }}/>
                         <AntDesign name="caretdown" size={12} color={Colors.danube} onPress={() => {
-                            console.log('decrease continuity')
+                            if(parseInt(continuity) > 1){
+                                setContinuity((parseInt(continuity)-1).toString())
+                                setEndDate(moment(startDate).add(parseInt(continuity)-2, 'days'))
+                            }
                         }}/>
                     </View>
                 </View>
@@ -262,12 +276,12 @@ const SetReminderScreen = (props) => {
                 </View>
                 <View style={{width: '50%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.blackSqueeze}}>
                     <TextInput style={{width: '100%', paddingHorizontal: 8}} textAlign={'center'} value={unit} onChangeText={text => setUnit(text.replace(/[^0-9]/g, ''))} keyboardType='numeric'/>
-                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30)}}>
+                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30), marginRight: 7}}>
                         <AntDesign name="caretup" size={12} color={Colors.danube} onPress={() => {
-                            console.log('increase continuity')
+                            setUnit((parseInt(unit)+1).toString())
                         }}/>
                         <AntDesign name="caretdown" size={12} color={Colors.danube} onPress={() => {
-                            console.log('decrease continuity')
+                            setUnit((parseInt(unit)-1).toString())
                         }}/>
                     </View>
                 </View>
@@ -327,14 +341,14 @@ const SetReminderScreen = (props) => {
                             setTimesPerDayError('Times per day value must be 1 to 5')
                         }
                     }} keyboardType='numeric' maxLength={1}/>
-                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30)}}>
+                    <View style={{alignSelf: 'flex-end', marginTop: -RFValue(30), marginRight: 7}}>
                         <AntDesign name="caretup" size={12} color={Colors.danube} onPress={() => {
                             if(timesPerDay != 5){
                                 setTimesPerDay((parseInt(timesPerDay) + 1).toString())
                             }
                         }}/>
                         <AntDesign name="caretdown" size={12} color={Colors.danube} onPress={() => {
-                            if(timesPerDay > 0){
+                            if(timesPerDay > 1){
                                 setTimesPerDay((parseInt(timesPerDay) - 1).toString())
                             }
                         }}/>

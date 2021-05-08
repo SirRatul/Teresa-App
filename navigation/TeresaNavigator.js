@@ -14,6 +14,7 @@ import ForgotPassScreen from '../screens/auth/ForgotPassScreen';
 import ForgotPassVerifyScreen from '../screens/auth/ForgotPassVerifyScreen';
 import ResetPassScreen from '../screens/auth/ResetPassScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
+import AboutTeresaScreen from '../screens/Home/AboutTeresaScreen';
 import ActiveReminderScreen from '../screens/Reminder/ActiveReminderScreen';
 import MyPrescriptionScreen from '../screens/Prescription/MyPrescriptionScreen';
 import NotificationScreen from '../screens/Notification/NotificationScreen';
@@ -49,6 +50,7 @@ const AuthNavigator = createStackNavigator({
 
 const HomeNavigator = createStackNavigator({
         Home: HomeScreen,
+        AboutTeresa: AboutTeresaScreen,
         SetReminder: SetReminderScreen,
         UploadPrescription: UploadPrescriptionScreen
     }, {

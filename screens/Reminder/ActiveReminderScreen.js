@@ -8,7 +8,7 @@ import Avatar from '../../assets/icons/Avatar.png';
 import Colors from '../../constants/Colors';
 import moment from 'moment';
 import CustomAlert from '../../components/CustomAlert';
-import NoOrder from '../../assets/icons/NoOrder.jpg';
+import NoReminder from '../../assets/icons/NoReminder.png';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import * as Notifications from 'expo-notifications';
 import * as Permissions from 'expo-permissions';
@@ -26,7 +26,7 @@ const ActiveReminderScreen = (props) => {
     Notifications.setNotificationCategoryAsync('welcome', [
         {
           identifier: 'one',
-          buttonTitle: 'Yes',
+          buttonTitle: 'Okay',
           options: {
             isDestructive: false,
             isAuthenticationRequired: false
@@ -34,7 +34,7 @@ const ActiveReminderScreen = (props) => {
         },
         {
           identifier: 'two',
-          buttonTitle: 'No',
+          buttonTitle: 'Cancel',
           options: {
             isDestructive: true,
             isAuthenticationRequired: false
@@ -75,13 +75,19 @@ const ActiveReminderScreen = (props) => {
         setToken(tempUserData.token)
         setIsRefreshing(true)
         setIsLoading(true)
+        console.log(tempUserData.token)
+        console.log(APP_BACKEND_URL)
         try {
+            console.log('1')
             const response = await axios.get(APP_BACKEND_URL+'routines/active/medicine', {
                 headers: {
                     Authorization : `Bearer ${tempUserData.token}`
                 }
             })
+            console.log('2')
             setIsLoading(false)
+            console.log('response.data.message')
+            console.log(response.data.message)
             setRoutineList(response.data.message.activeRoutines)
             Notifications.cancelAllScheduledNotificationsAsync()
             /* Notifications.scheduleNotificationAsync({
@@ -126,7 +132,8 @@ const ActiveReminderScreen = (props) => {
         } catch (error) {
             setIsLoading(false)
             setErrorMessage(error.response.data.message)
-            console.log(error.response.data.message)
+            console.log('error.response.data.message')
+            console.log(error)
         }
         setIsRefreshing(false)
     }
@@ -141,10 +148,10 @@ const ActiveReminderScreen = (props) => {
         timeString = ''
         time.forEach((element) => {
             if(element.trim().length > 0){
-                timeString = timeString + timeFormat(element.trim()) + ' '
+                timeString = timeString + timeFormat(element.trim()) + ', '
             }
         });
-        return timeString.trim()
+        return timeString.trim().slice(0, -1)
     }
     useEffect(()=>{
         getUserData()
@@ -275,16 +282,16 @@ const ActiveReminderScreen = (props) => {
                                         <TouchableOpacity onPress={() => {
                                             updateRoutine(itemData.item._id, itemData.item.notification)
                                         }}>
-                                            <MaterialCommunityIcons name="toggle-switch" size={36} color={Colors.japaneseLaurel} />
+                                            <MaterialCommunityIcons name="toggle-switch" size={36} style={{marginTop: -5, marginRight: 8}} color={Colors.japaneseLaurel} />
                                         </TouchableOpacity>
                                         :
                                         <TouchableOpacity onPress={() => {
                                             updateRoutine(itemData.item._id, itemData.item.notification)
                                         }}>
-                                            <MaterialCommunityIcons name="toggle-switch-off" size={36} color={Colors.grayChateau} />
+                                            <MaterialCommunityIcons name="toggle-switch-off" size={36} style={{marginTop: -5, marginRight: 8}} color={Colors.grayChateau} />
                                         </TouchableOpacity>
                                     }
-                                    <Ionicons name="pencil" size={26} color={Colors.pillColor} onPress={() => {
+                                    <Ionicons name="pencil" size={20} style={{marginTop: 4, marginRight: 8}} color={Colors.pillColor} onPress={() => {
                                         props.navigation.navigate('UpdateReminder', {
                                             routineId:  itemData.item._id,
                                             itemName: itemData.item.itemName,
@@ -333,62 +340,8 @@ const ActiveReminderScreen = (props) => {
                 <View style={{width: '100%', marginTop: RFPercentage(3)}}/>
                 </>
                 :
-                <Image style={{width: Dimensions.get('window').width, height: Dimensions.get('window').height, flex: 1, resizeMode: 'contain'}} source={NoOrder}/>
+                <Image style={{width: Dimensions.get('window').width, height: Dimensions.get('window').height, flex: 1, resizeMode: 'contain', marginTop: -RFPercentage(20)}} source={NoReminder}/>
             }
-            {/* <View style={{flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: RFPercentage(3), borderWidth: 1, borderRadius: 10, borderColor: Colors.silver}}>
-                <View style={{width: '20%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.linkWater, padding: 15,}}>
-                    <MaterialCommunityIcons name="pill" size={40} color={Colors.pillColor} />
-                </View>
-                <View style={{width: '80%', padding: 20}}>
-                    <View style={{width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <Text style={{fontSize: RFValue(17), color: Colors.violentViolet, fontWeight: 'bold'}}>Pantonix 20 mg</Text>
-                        <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-                            <MaterialCommunityIcons name="toggle-switch-off" size={36} color={Colors.grayChateau} />
-                            <Ionicons name="pencil" size={26} color={Colors.pillColor} onPress={() => {
-                                props.navigation.navigate('UpdateReminder')
-                            }}/>
-                            <MaterialIcons name="delete" size={26} color={Colors.pillColor} />
-                        </View>
-                    </View>
-                    <View style={{borderWidth: 1, alignSelf: 'flex-start', padding: 2, borderRadius: 5, borderColor: Colors.silver}}>
-                        <Text style={{fontSize: RFValue(10),color: Colors.butterflyBush}}>Next pill time at 9:00 PM</Text>
-                    </View>
-                    <Text style={{color: Colors.logan}}>1 pill before meal</Text>
-                    <Text style={{color: Colors.logan}}>3 pills left</Text>
-                    <Text style={{color: Colors.logan}}>7 September - 13 September</Text>
-                    <Text style={{color: Colors.logan}}>8:00 AM, 2:00 PM, 9:00 PM</Text>
-                    <View style={{borderRadius: 5, alignSelf: 'flex-start', marginTop: 5, backgroundColor: Colors.japaneseLaurel, paddingVertical: 3, paddingHorizontal: 10}}>
-                        <Text style={{color: 'white'}}>On Time</Text>
-                    </View>
-                </View>
-            </View>
-            <View style={{flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', margin: RFPercentage(3), borderWidth: 1, borderRadius: 10, borderColor: Colors.silver}}>
-                <View style={{width: '20%', height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.linkWater, padding: 15,}}>
-                    <MaterialCommunityIcons name="pill" size={40} color={Colors.pillColor} />
-                </View>
-                <View style={{width: '80%', padding: 20}}>
-                    <View style={{width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <Text style={{fontSize: RFValue(17), color: Colors.violentViolet, fontWeight: 'bold'}}>Pantonix 20 mg</Text>
-                        <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-                            <MaterialCommunityIcons name="toggle-switch" size={36} color={Colors.japaneseLaurel} />
-                            <Ionicons name="pencil" size={26} color={Colors.pillColor} onPress={() => {
-                                props.navigation.navigate('UpdateReminder')
-                            }}/>
-                            <MaterialIcons name="delete" size={26} color={Colors.pillColor} />
-                        </View>
-                    </View>
-                    <View style={{borderWidth: 1, alignSelf: 'flex-start', padding: 2, borderRadius: 5, borderColor: Colors.silver}}>
-                        <Text style={{fontSize: RFValue(10),color: Colors.butterflyBush}}>Next pill time at 9:00 PM</Text>
-                    </View>
-                    <Text style={{color: Colors.logan}}>1 pill before meal</Text>
-                    <Text style={{color: Colors.logan}}>3 pills left</Text>
-                    <Text style={{color: Colors.logan}}>7 September - 13 September</Text>
-                    <Text style={{color: Colors.logan}}>8:00 AM, 2:00 PM, 9:00 PM</Text>
-                    <View style={{borderRadius: 5, alignSelf: 'flex-start', marginTop: 5, backgroundColor: Colors.japaneseLaurel, paddingVertical: 3, paddingHorizontal: 10}}>
-                        <Text style={{color: 'white'}}>On Time</Text>
-                    </View>
-                </View>
-            </View> */}
             {isLoading &&
                 <LoadingSpinner/>
             }
